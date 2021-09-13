@@ -1,91 +1,119 @@
+const allProducts = document.getElementById('all-products');
+const searchField = document.getElementById('search-field');
+const searchBtn = document.getElementById('search-btn');
+let count = 0;
 const loadProducts = () => {
-	// const url = `https://fakestoreapi.com/products`;
-	const url = 'http://127.0.0.1:5500/data.json'
+	const url = `https://fakestoreapi.com/products`;
 	fetch(url)
 		.then((response) => response.json())
 		.then((data) => showProducts(data));
 };
-loadProducts();
+
 
 // show all product in UI 
 const showProducts = (products) => {
 	for (const product of products) {
-		const { title, price, category, image } = product;
+		const { title, price, category, image, rating: { rate, count } } = product;
 		const div = document.createElement("div");
-		div.classList.add("col");
+		div.classList.add("col", "single-product");
 		div.innerHTML = `
-      		<div class="single-product card h-100">
-      			<div class="card-body">
-        			<img class="product-image" src="${image}"/>
-					<h4 class="card-title">${title}</h4>
-					<p class="card-text">Category: ${category}</p>
-					<h3>Price: $ ${price}</h3>
+      		<div class="card h-100 product">
+      			<div class="card-body text-center">
+        			<div class="mb-2">
+						<img class="card-img-top product-image" src="${image}"/>
+					</div>
+					<h5 class="card-title">${title}</h5>
+					<p class="card-text">Category: ${category}</p>	
       			</div>
       		
 				<div class="card-footer">
-					<button onclick="addToCart(${price})" id="addToCart-btn" class="buy-now btn btn-success">add to cart</button>
-					<button id="details-btn" class="btn btn-danger">Details</button>
+					<h4 class="text-center">Price: $ ${price}</h4>
+					<div class="d-flex justify-content-evenly">
+						<button onclick="addToCart(${price})" id="addToCart-btn" class="buy-now btn btn-outline-success">add to cart</button>
+						<button id="details-btn" class="btn btn-outline-info">Details</button>
+					</div>
+					<div class="d-flex justify-content-between mt-2">
+						<button class="btn btn-info">Ratings: ${rate}</button>
+						<button class="btn btn-success	">Rated by: ${count}</button>
+					</div>
       			</div>
-      		
       		</div>
       	`;
-		document.getElementById("all-products").appendChild(div);
+		allProducts.appendChild(div);
 	}
 };
-let count = 0;
 const addToCart = (price) => {
-	count = count + 1;
+	count++;
 	updatePrice('price', price);
-
 	updateTaxAndCharge();
 	updateTotal()
 	document.getElementById("total-Products").innerText = count;
 };
 
-const getInputValue = (id) => {
+const getValue = (id) => {
 	const element = document.getElementById(id).innerText;
-	const converted = parseFloat(element);
-	return converted;
+	const value = parseFloat(element);
+	return value;
 };
 
 // main price update function
 const updatePrice = (id, value) => {
-	const convertedOldPrice = getInputValue(id);
-	const convertPrice = parseFloat(value);
-	const total = convertedOldPrice + convertPrice;
+	const previousProductPrice = getValue(id);
+	const newProductPrice = parseFloat(value);
+	const total = previousProductPrice + newProductPrice;
 	document.getElementById(id).innerText = total.toFixed(2);
 };
 
 // set innerText function
-const setInnerText = (id, value) => {
-	const val = parseFloat(value)
-	document.getElementById(id).innerText = val.toFixed(2);
+const setValue = (id, val) => {
+	const value = parseFloat(val)
+	document.getElementById(id).innerText = value.toFixed(2);
 };
 
 // update delivery charge and total Tax
 const updateTaxAndCharge = () => {
-	const priceConverted = getInputValue("price");
-	if (priceConverted <= 200) {
-		setInnerText('delivery-charge', 20);
+	const productPrice = getValue("price");
+	if (productPrice > 200) {
+		setValue("delivery-charge", 30);
+		setValue("total-tax", productPrice * 0.2);
 	}
-	if (priceConverted > 200) {
-		setInnerText("delivery-charge", 30);
-		setInnerText("total-tax", priceConverted * 0.2);
+	if (productPrice > 400) {
+		setValue("delivery-charge", 50);
+		setValue("total-tax", productPrice * 0.3);
 	}
-	if (priceConverted > 400) {
-		setInnerText("delivery-charge", 50);
-		setInnerText("total-tax", priceConverted * 0.3);
-	}
-	if (priceConverted > 500) {
-		setInnerText("delivery-charge", 60);
-		setInnerText("total-tax", priceConverted * 0.4);
+	if (productPrice > 500) {
+		setValue("delivery-charge", 60);
+		setValue("total-tax", productPrice * 0.4);
+	} else {
+		setValue('delivery-charge', 20)
 	}
 };
 
 //grandTotal update function
 const updateTotal = () => {
-	const grandTotal =
-		getInputValue("price") + getInputValue("delivery-charge") +
-		getInputValue("total-tax");
+	const price = getValue('price');
+	const deliveryCharge = getValue('delivery-charge');
+	const tax = getValue('total-tax');
+	const grandTotal = price + deliveryCharge + tax;
 	document.getElementById("total").innerText = grandTotal.toFixed(2);
 };
+
+
+// search functionality
+const searchProduct = () => {
+	const productList = document.getElementsByClassName('single-product')
+	const searchKey = searchField.value.toLowerCase();
+	for (const product of productList) {
+		product.innerText.toLowerCase().includes(searchKey) ?
+			product.style.display = 'block' : product.style.display = 'none';
+	}
+}
+
+searchBtn.addEventListener('click', (e) => {
+	e.preventDefault()
+	searchProduct()
+})
+
+// showing products initially
+loadProducts();
+
