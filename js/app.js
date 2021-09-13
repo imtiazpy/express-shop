@@ -2,6 +2,8 @@ const allProducts = document.getElementById('all-products');
 const searchField = document.getElementById('search-field');
 const searchBtn = document.getElementById('search-btn');
 let count = 0;
+
+// function for loading all the products from the API 
 const loadProducts = () => {
 	const url = `https://fakestoreapi.com/products`;
 	fetch(url)
@@ -17,9 +19,9 @@ const showProducts = (products) => {
 		const div = document.createElement("div");
 		div.classList.add("col", "single-product");
 		div.innerHTML = `
-      		<div class="card h-100 product">
+      		<div class="card h-100 product border border-info">
       			<div class="card-body text-center">
-        			<div class="mb-2">
+        			<div class="border border-info rounded-3 p-2 mb-2">
 						<img class="card-img-top product-image" src="${image}"/>
 					</div>
 					<h5 class="card-title">${title}</h5>
@@ -32,9 +34,10 @@ const showProducts = (products) => {
 						<button onclick="addToCart(${price})" id="addToCart-btn" class="buy-now btn btn-outline-success">add to cart</button>
 						<button id="details-btn" class="btn btn-outline-info">Details</button>
 					</div>
-					<div class="d-flex justify-content-between mt-2">
-						<button class="btn btn-info">Ratings: ${rate}</button>
-						<button class="btn btn-success	">Rated by: ${count}</button>
+					<div class="d-flex justify-content-evenly mt-2">
+						<button class="btn btn-info">${rate} <i class="fas fa-star"></i>
+						</button>
+						<button class="btn btn-success">Reviewed by: ${count}</button>
 					</div>
       			</div>
       		</div>
@@ -42,18 +45,15 @@ const showProducts = (products) => {
 		allProducts.appendChild(div);
 	}
 };
+
+// function for adding products to cart 
 const addToCart = (price) => {
 	count++;
+	toggleError(false)
 	updatePrice('price', price);
 	updateTaxAndCharge();
 	updateTotal()
 	document.getElementById("total-Products").innerText = count;
-};
-
-const getValue = (id) => {
-	const element = document.getElementById(id).innerText;
-	const value = parseFloat(element);
-	return value;
 };
 
 // main price update function
@@ -64,7 +64,14 @@ const updatePrice = (id, value) => {
 	document.getElementById(id).innerText = total.toFixed(2);
 };
 
-// set innerText function
+// get value from any amount field by ID 
+const getValue = (id) => {
+	const element = document.getElementById(id).innerText;
+	const value = parseFloat(element);
+	return value;
+};
+
+// set innerText of any field
 const setValue = (id, val) => {
 	const value = parseFloat(val)
 	document.getElementById(id).innerText = value.toFixed(2);
@@ -84,8 +91,6 @@ const updateTaxAndCharge = () => {
 	if (productPrice > 500) {
 		setValue("delivery-charge", 60);
 		setValue("total-tax", productPrice * 0.4);
-	} else {
-		setValue('delivery-charge', 20)
 	}
 };
 
@@ -95,17 +100,34 @@ const updateTotal = () => {
 	const deliveryCharge = getValue('delivery-charge');
 	const tax = getValue('total-tax');
 	const grandTotal = price + deliveryCharge + tax;
-	document.getElementById("total").innerText = grandTotal.toFixed(2);
+	setValue('total', grandTotal.toFixed(2));
+	// document.getElementById("total").innerText = grandTotal.toFixed(2);
 };
 
-
 const buyNowHandler = () => {
+	const addedProducts = count
 	const cartAmountFields = ['price', 'delivery-charge', 'total-tax', 'total'];
-	cartAmountFields.forEach(field => setValue(field, 0));
+	cartAmountFields.forEach(field => {
+		if (addedProducts === 0) {
+			toggleError("No products were added to cart! Please add some", true)
+		} else {
+			toggleError(false)
+			setValue(field, 0)
+		}
+	});
 	count = 0
 	document.getElementById("total-Products").innerText = count;
 }
 
+const toggleError = (msg = '', toShow) => {
+	const errorMsg = document.getElementById('error-message');
+	if (toShow) {
+		errorMsg.innerText = msg;
+		errorMsg.classList.remove('d-none');
+	} else {
+		errorMsg.classList.add('d-none')
+	}
+}
 
 
 // search functionality
@@ -125,4 +147,24 @@ searchBtn.addEventListener('click', (e) => {
 
 // showing products initially
 loadProducts();
+
+
+
+/*
+tried to show stars according to the data value, but could quite get it done.
+it's taking way too much time to show the stars on each card in each iteration.
+Need to work on it later
+*/
+
+// const ratingsHandler = (rate) => {
+// 	let star;
+// 	if (rate >= 4) {
+// 		star = '<i class="fas fa-star"></i>'.repeat(4)
+// 	} else if (rate >= 3) {
+// 		star = '<i class="fas fa-star"></i>'.repeat(3)
+// 	} else {
+// 		star = '<i class="fas fa-star"></i>'.repeat(2)
+// 	}
+// 	return star
+// }
 
