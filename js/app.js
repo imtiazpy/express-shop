@@ -99,6 +99,15 @@ const updateTotal = () => {
 };
 
 
+const buyNowHandler = () => {
+	const cartAmountFields = ['price', 'delivery-charge', 'total-tax', 'total'];
+	cartAmountFields.forEach(field => setValue(field, 0));
+	count = 0
+	document.getElementById("total-Products").innerText = count;
+}
+
+
+
 // search functionality
 const searchProduct = () => {
 	const productList = document.getElementsByClassName('single-product')
