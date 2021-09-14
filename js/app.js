@@ -1,12 +1,13 @@
 const allProducts = document.getElementById('all-products');
 const searchField = document.getElementById('search-field');
 const searchBtn = document.getElementById('search-btn');
-const totalProducts = document.getElementById('total-Products');
+const addedProducts = document.getElementById('added-Products');
 let count = 0;
 
 // function for loading all the products from the API 
 const loadProducts = () => {
-	const url = `https://fakestoreapi.com/products`;
+	// const url = `https://fakestoreapi.com/products`;
+	const url = `http://127.0.0.1:5500/data.json`
 	fetch(url)
 		.then((response) => response.json())
 		.then((data) => showProducts(data));
@@ -15,14 +16,20 @@ const loadProducts = () => {
 
 // show all product in UI 
 const showProducts = (products) => {
+	// this object is used for adding star rating in each product dynamically
+	const ratingObj = {}
+
 	for (const product of products) {
-		const { id, title, price, category, image, rating: { rate, count } } = product;
+
+		const { id, title, price, category, image, description, rating: { rate, count } } = product;
+		ratingObj[`ratings-${id}`] = rate
+
 		const div = document.createElement("div");
 		div.classList.add("col", "single-product");
 		div.innerHTML = `
       		<div class="card h-100 product border border-info">
-      			<div class="card-body text-center">
-        			<div class="border border-info rounded-3 p-2 mb-2">
+      			<div id="card-body" class="card-body text-center">
+        			<div class="bg-white border border-info rounded-3 p-2 mb-2">
 						<img class="card-img-top product-image" src="${image}"/>
 					</div>
 					<h5 class="card-title">${title}</h5>
@@ -32,43 +39,46 @@ const showProducts = (products) => {
 					<h4 class="text-center">Price: $ ${price}</h4>
 					<div class="d-flex justify-content-evenly">
 						<button onclick="addToCart(${price})" id="addToCart-btn" class="buy-now btn btn-outline-success">add to cart</button>
-						<button id="details-btn" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="showDetail(${id})">Details</button>
+						<button id="details-btn" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="showDetail('${title}', '${image}', '${description}')">Details</button>
 					</div>
 					<div class="d-flex justify-content-evenly mt-2">
-						<button class="btn btn-info">${rate} <i class="fas fa-star"></i>
+						<button class="d-flex align-items-center btn btn-info ratings-${id}">
+							<div class="hollow">
+								<div class="solid"></div>
+							</div>
+							<span class="rate ms-1">(${rate})</span>
 						</button>
-						<button class="btn btn-success">Reviewed by: ${count}</button>
+						<button class="btn btn-success">
+							<i class="fas fa-user-friends"></i> <span class="rate">${count}</span>
+						</button>
 					</div>
       			</div>
       		</div>
       	`;
 		allProducts.appendChild(div);
 	}
+	// setting the ratings of the product on each card element
+	setRatings(ratingObj)
 };
 
+
 // show single product info in the modal on button click
-const showDetail = id => {
+const showDetail = (title, image, description) => {
 	const detailCard = document.getElementById('detail-card');
 	detailCard.textContent = '';
-	const url = `https://fakestoreapi.com/products/${id}`;
-	fetch(url)
-		.then(res => res.json())
-		.then(product => {
-			const { title, description, image } = product;
-			detailCard.innerHTML = `
-				<div class="col">
-					<div class="card border border-info">
-						<div class="card-body text-center">
-							<div class="border border-info rounded-3 p-2 mb-2">
-								<img class="card-img-top product-image" src="${image}"/>
-							</div>
-							<h5 class="card-title">${title}</h5>
-							<p class="card-text">${description}</p>	
-	  					</div>
+	detailCard.innerHTML = `
+		<div class="col">
+			<div class="card border border-info">
+				<div class="card-body text-center">
+					<div class="border border-info rounded-3 p-2 mb-2">
+						<img class="card-img-top product-image" src="${image}"/>
 					</div>
-				</div>
-			`
-		})
+					<h5 class="card-title">${title}</h5>
+					<p class="card-text">${description}</p>	
+	  			</div>
+			</div>
+		</div>
+	`
 }
 
 
@@ -90,12 +100,12 @@ const setValue = (id, val) => {
 // function for adding products to cart 
 const addToCart = (price) => {
 	count++;
-	// disabling err message if it was enabled on buyNow button click
+	// disabling err message in case it was enabled on buyNow button click
 	toggleError(false)
 	updatePrice('price', price);
 	updateTaxAndCharge();
 	updateTotal()
-	totalProducts.innerText = count;
+	addedProducts.innerText = count;
 };
 
 // main price update function
@@ -147,7 +157,7 @@ const buyNowHandler = () => {
 	count = 0
 	// setting the initial delivery charge and products count 
 	document.getElementById('delivery-charge').innerText = 20;
-	totalProducts.innerText = count;
+	addedProducts.innerText = count;
 }
 
 // function to toggle error message on and off
@@ -159,14 +169,27 @@ const toggleError = (msg = '', toShow) => {
 	} else {
 		alertMsg.classList.add('d-none')
 	}
-}
+};
 
 
+// function for star ratings
+const setRatings = ratingObj => {
+	const starTotal = 5;
+	for (const rating in ratingObj) {
+		const percentage = (ratingObj[rating] / starTotal) * 100;
+		const percentageRounded = `${(Math.round(percentage / 10) * 10)}%`;
+		// the className of the ratings btn and the key of ratingObj matches, 
+		// hence we are setting style on the ratings btn using that key of ratingObj
+		document.querySelector(`.${rating} .solid`).style.width = percentageRounded;
+	}
+};
 
 
 // search functionality
 const searchProduct = () => {
-	// taking all the cards in an array with classname 
+	// disabling error in case it was enabled on empty search 
+	toggleError(false)
+	// taking all the cards in an array by className 
 	const productList = document.getElementsByClassName('single-product')
 	const searchKey = searchField.value.toLowerCase();
 
@@ -179,7 +202,13 @@ const searchProduct = () => {
 
 searchBtn.addEventListener('click', (e) => {
 	e.preventDefault()
-	searchProduct()
+	if (!searchField.value) {
+		toggleError("Please type something in the box", true)
+	} else {
+		toggleError(false)
+		searchProduct()
+	}
+
 })
 
 // showing products initially

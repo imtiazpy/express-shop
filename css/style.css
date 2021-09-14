@@ -20,7 +20,41 @@ body {
 .cart {
   padding: 10px;
   box-shadow: 10px 10px 20px gray;
+  background-color: rgba(0,0,0,.03);
   border-radius: 5px;
   position: fixed;
 }
 
+#card-body {
+  background-color: rgba(0,0,0,.03);
+}
+
+/* style for star ratings */
+.hollow {
+  display: inline-block;
+  position: relative;
+  font-family: FontAwesome;
+}
+.hollow::before {
+  content: "\f006\f006\f006\f006\f006";
+  font-size: 13px;
+}
+
+.solid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0%;
+}
+
+.solid::before {
+  content: "\f005\f005\f005\f005\f005";
+  color: darkorange;
+  font-size: 13px;
+}
+
+.rate {
+  font-size: 13px;
+}
